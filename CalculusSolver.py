@@ -2,7 +2,7 @@ import sympy as sp
 import matplotlib.pyplot as plt
 import numpy as np
 
-x = sp.symbols('x')
+x, y = sp.symbols('x y')
 
 def plot(func, der=None, integral=None, x_range=(-10, 10)):
     func_numeric = sp.lambdify(x, func, 'numpy')
@@ -39,6 +39,7 @@ def main():
     print("- Definite integrals (with limits)")
     print("- Limits of functions as x approaches a point")
     print("- Taylor Series Approximation")
+    print("- Partial Derivatives")
     
     while True:
         func_input = input("Enter a function (e.g., 2^x + 4*y + 5): ")
@@ -58,8 +59,9 @@ def main():
         print("3: Definite Integral")
         print("4: Limit")
         print("5: Taylor Series")
+        print("6: Partial Derivative")
         
-        choice = input("Enter your choice from the options above (1/2/3/4/5): ")
+        choice = input("Enter your choice from the options above (1/2/3/4/5/6): ")
         
         if choice == '1':
             der = sp.diff(func, x)
@@ -90,8 +92,19 @@ def main():
             simple = simple.subs(sp.log(sp.E), 1)
             print(simple)
         
+        elif choice == '6':
+            var_choice = input("Do you want to compute the partial derivative with respect to x or y? (x/y): ")
+            if var_choice == 'x':
+                p_d = sp.diff(func, x)
+                print("Partial derivative with respect to x:", p_d)
+            elif var_choice == 'y':
+                p_d = sp.diff(func, y)
+                print("Partial derivative with respect to y:", p_d)
+            else:
+                print("Invalid variable choice.")
+        
         else:
-            print("Invalid choice. Please select 1, 2, 3, 4, or 5.")
+            print("Invalid choice. Please select 1, 2, 3, 4, 5, or 6.")
 
 if __name__ == "__main__":
     main()
