@@ -1,42 +1,33 @@
+import sympy as sp
 import matplotlib.pyplot as plt
 import numpy as np
-from sympy import symbols, diff, integrate, limit, sympify, lambdify
 
-def format_result(res, is_integral=False):
-    res_str = str(res)
-    res_str = res_str.replace("**", "^")
-    res_str = res_str.replace("*", "")
-    if is_integral:
-        res_str = res_str + " + C"
-    return res_str
+x = sp.symbols('x')
 
-def plot_function_and_derivative(f, df):
-    f_numeric = lambdify('x', f, 'numpy')
-    df_numeric = lambdify('x', df, 'numpy')
-    a_vals = np.linspace(-10, 10, 400)
-    f_vals = f_numeric(a_vals)
-    df_vals = df_numeric(a_vals)
-    plt.plot(a_vals, f_vals, label="Function")
-    plt.plot(a_vals, df_vals, label="Derivative", linestyle="--")
-    plt.legend()
-    plt.title("Function and its Derivative")
+def plot(func, der=None, integral=None, x_range=(-10, 10)):
+    func_numeric = sp.lambdify(x, func, 'numpy')
+    
+    if 'asin' in str(func) or 'acos' in str(func) or 'atan' in str(func):
+        x_range = (max(x_range[0], -1), min(x_range[1], 1))
+
+    func_vals = func_numeric(np.linspace(x_range[0], x_range[1], 400))
+    
+    plt.plot(np.linspace(x_range[0], x_range[1], 400), func_vals, label="Function", color="blue")
+
+    if der:
+        der_numeric = sp.lambdify(x, der, 'numpy')
+        der_vals = der_numeric(np.linspace(x_range[0], x_range[1], 400))
+        plt.plot(np.linspace(x_range[0], x_range[1], 400), der_vals, label="Derivative", linestyle="--", color="green")
+
+    if integral:
+        integral_numeric = sp.lambdify(x, integral, 'numpy')
+        integral_vals = integral_numeric(np.linspace(x_range[0], x_range[1], 400))
+        plt.plot(np.linspace(x_range[0], x_range[1], 400), integral_vals, label="Integral", linestyle=":", color="red")
+    
+    plt.title("Function, Derivative, and Integral")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.grid(True)
-    plt.show()
-
-def plot_indefinite_integral(f, int_f):
-    f_numeric = lambdify('x', f, 'numpy')
-    int_f_numeric = lambdify('x', int_f, 'numpy')
-    a_vals = np.linspace(-10, 10, 400)
-    f_vals = f_numeric(a_vals)
-    int_f_vals = int_f_numeric(a_vals)
-    plt.plot(a_vals, f_vals, label="Function")
-    plt.plot(a_vals, int_f_vals, label="Indefinite Integral", linestyle="--")
-    plt.legend()
-    plt.title("Function and its Indefinite Integral")
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.legend(loc="upper right")
     plt.grid(True)
     plt.show()
 
@@ -47,68 +38,60 @@ def main():
     print("- Indefinite integrals of functions")
     print("- Definite integrals (with limits)")
     print("- Limits of functions as x approaches a point")
-    print("\nExamples of valid functions: x^3 - 2*x + 5, sqrt(1 + sin(x)), x^2 + 3*x - 7, log(x), sin(x), 2^x + 4*y + 5")
-    print("Type 'exit' at any time to quit.")
+    print("- Taylor Series Approximation")
     
-    x = symbols('x')
-
     while True:
-        a_input = input("\nEnter a function (e.g., 2^x + 4*y + 5): ")
+        func_input = input("Enter a function (e.g., 2^x + 4*y + 5): ")
         
-        if a_input.lower() == 'exit':
-            print("See you later!")
+        if func_input.lower() == 'exit':
             break
-
-        a_input = a_input.replace("^", "**")
         
         try:
-            a = sympify(a_input)
-        except Exception as e:
-            print("Invalid expression. Please try again. Ensure your expression is correctly formatted.")
-            print("Error details: " + str(e))
+            func = sp.sympify(func_input)
+        except sp.SympifyError:
+            print("Invalid function. Please try again.")
             continue
-
+        
         print("\nChoose an operation:")
         print("1: Derivative")
         print("2: Indefinite Integral")
         print("3: Definite Integral")
         print("4: Limit")
+        print("5: Taylor Series")
         
-        choice = input("Enter your choice from the options above (1/2/3/4): ")
-
+        choice = input("Enter your choice from the options above (1/2/3/4/5): ")
+        
         if choice == '1':
-            b = diff(a, x)
-            b_res = format_result(b)
-            print("Derivative: " + b_res)
-            plot_function_and_derivative(a, b)
-
+            der = sp.diff(func, x)
+            print(der)
+            plot(func, der=der)
+        
         elif choice == '2':
-            c = integrate(a, x)
-            c_res = format_result(c, is_integral=True)
-            print("Indefinite Integral: " + c_res)
-            plot_indefinite_integral(a, c)
-
+            integral = sp.integrate(func, x) + sp.symbols('C')
+            print(integral)
+            plot(func, integral=integral)
+        
         elif choice == '3':
-            try:
-                d = float(input("Enter lower limit: "))
-                e = float(input("Enter upper limit: "))
-                f = integrate(a, (x, d, e))
-                f_res = format_result(f)
-                print(f"Definite Integral from {d} to {e}: " + f_res)
-            except ValueError:
-                print("Invalid limits. Please enter numeric values.")
-
+            a = float(input("Enter the lower limit: "))
+            b = float(input("Enter the upper limit: "))
+            d_integral = sp.integrate(func, (x, a, b))
+            print(d_integral)
+            plot(func, x_range=(a, b))
+        
         elif choice == '4':
-            try:
-                g = float(input("Enter the point to evaluate the limit at: "))
-                h = limit(a, x, g)
-                h_res = format_result(h)
-                print(f"Limit as x approaches {g}: " + h_res)
-            except ValueError:
-                print("Invalid point. Please enter a numeric value.")
-
+            point = float(input("Enter the point to approach for limit: "))
+            limit_value = sp.limit(func, x, point)
+            print(limit_value)
+        
+        elif choice == '5':
+            point = float(input("Enter the point to expand around: "))
+            t_series = sp.series(func, x, point, 6)
+            simple = sp.simplify(t_series)
+            simple = simple.subs(sp.log(sp.E), 1)
+            print(simple)
+        
         else:
-            print("Invalid choice. Please select 1, 2, 3, or 4.")
+            print("Invalid choice. Please select 1, 2, 3, 4, or 5.")
 
 if __name__ == "__main__":
     main()
